@@ -1,0 +1,5 @@
+# Decisions and the Claude Code enforcement layer need the owner's review (ADR-0000).
+# Branch protection on main must require review from code owners for this to take effect.
+/docs/adr/ @KellyJDavis
+/.claude/ @KellyJDavis
+/.github/ @KellyJDavis

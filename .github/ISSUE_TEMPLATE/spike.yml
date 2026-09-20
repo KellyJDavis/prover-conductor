@@ -1,0 +1,23 @@
+name: Spike
+description: Run one of the spikes in docs/spikes to its exit criteria.
+title: "[spike] SPIKE-NN "
+labels: ["spike"]
+body:
+  - type: input
+    id: spike
+    attributes:
+      label: Spike
+      placeholder: SPIKE-01
+    validations:
+      required: true
+  - type: input
+    id: timebox
+    attributes:
+      label: Time box
+      placeholder: 5 working days
+    validations:
+      required: true
+  - type: textarea
+    id: adjustments
+    attributes:
+      label: Adjustments to the method or exit criteria

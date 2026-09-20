@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.import_linter_cache/
+.pyright/
+
+# Lean
+.lake/
+lake-packages/
+
+# Claude Code: personal files and worktrees stay local
+.claude/worktrees/
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Spike scratch: clones of third-party repositories, builds and downloads
+spikes/*/work/
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/

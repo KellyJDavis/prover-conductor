@@ -1,0 +1,34 @@
+name: Task
+description: A unit of work for a person or Claude Code, with an exit command.
+title: "[task] "
+labels: ["task"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What is true when this is done?
+    validations:
+      required: true
+  - type: input
+    id: adrs
+    attributes:
+      label: ADRs involved
+      placeholder: ADR-0001, ADR-0010
+  - type: input
+    id: invariants
+    attributes:
+      label: Invariants added, changed or enforced
+      placeholder: INV-0001-3
+  - type: input
+    id: exit
+    attributes:
+      label: Exit command
+      description: A command that succeeds only when the task is done.
+      placeholder: uv run pytest tests/gate -q
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes

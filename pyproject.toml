@@ -1,0 +1,100 @@
+[project]
+name = "prover-conductor"
+version = "0.0.1.dev0"
+description = "Conducts agents that prove results in Lean, from informal statements to reviewed commits."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = []
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+
+[project.scripts]
+conductor = "prover_conductor.cli:main"
+
+[dependency-groups]
+dev = [
+    "import-linter>=2.0",
+    "pyright[nodejs]>=1.1.380",
+    "pytest>=8.0",
+    "pyyaml>=6.0",
+    "ruff>=0.6",
+    "types-pyyaml>=6.0",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/prover_conductor"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pyright]
+include = ["src", "scripts", "tests", ".claude/hooks"]
+extraPaths = ["scripts"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+strict = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "lean: needs a Lean toolchain and a Mathlib cache",
+    "network: needs network access",
+]
+addopts = "-m 'not lean and not network'"
+
+# Architectural rules (ADR-0001). Contract names mention the invariants they enforce.
+[tool.importlinter]
+root_package = "prover_conductor"
+
+[[tool.importlinter.contracts]]
+id = "gate-sole-github-writer"
+name = "Only the commit gate imports the GitHub write client (INV-0001-1)"
+type = "forbidden"
+source_modules = [
+    "prover_conductor.agents",
+    "prover_conductor.blueprint",
+    "prover_conductor.cli",
+    "prover_conductor.core",
+    "prover_conductor.data",
+    "prover_conductor.envs",
+    "prover_conductor.lean",
+    "prover_conductor.models",
+    "prover_conductor.sandbox",
+    "prover_conductor.search",
+    "prover_conductor.traces",
+    "prover_conductor.workflows",
+]
+forbidden_modules = ["prover_conductor.vcs.github_write"]
+
+[[tool.importlinter.contracts]]
+id = "deterministic-independent-of-stochastic"
+name = "The deterministic layer never imports agents or models (INV-0001-2)"
+type = "forbidden"
+source_modules = [
+    "prover_conductor.blueprint",
+    "prover_conductor.core",
+    "prover_conductor.data",
+    "prover_conductor.envs",
+    "prover_conductor.gate",
+    "prover_conductor.lean",
+    "prover_conductor.sandbox",
+    "prover_conductor.search",
+    "prover_conductor.traces",
+    "prover_conductor.vcs",
+]
+forbidden_modules = ["prover_conductor.agents", "prover_conductor.models"]

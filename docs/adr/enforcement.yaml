@@ -1,0 +1,54 @@
+# What enforces each ADR invariant (ADR-0000).
+#
+# Unlike accepted ADRs, this file may be edited at any time; CODEOWNERS routes changes to the
+# owner. Reference forms are listed in docs/adr/README.md.
+#
+#   enforced_by: references that enforce the invariant; empty or absent means not yet enforced
+#   scope:       optional globs; for an accepted ADR, real code here makes enforcement mandatory.
+#                Add a scope when a task starts implementing the invariant.
+#
+# Invariants without an entry are not enforced yet.
+
+INV-0000-1:
+  enforced_by:
+    - test:tests/meta/test_adr_tooling.py::test_repository_passes_invariant_check
+INV-0000-2:
+  enforced_by:
+    - test:tests/meta/test_adr_tooling.py::test_generated_rules_are_current
+INV-0000-3:
+  enforced_by:
+    - hook:.claude/hooks/protect_adrs.py
+    - test:tests/meta/test_hooks.py::test_protects_accepted_adrs_inside_a_worktree
+INV-0000-4:
+  enforced_by:
+    - codeowners:/docs/adr/
+INV-0000-5:
+  enforced_by:
+    - test:tests/meta/test_adr_tooling.py::test_scoped_debt_is_an_error
+INV-0001-1:
+  enforced_by:
+    - import-linter:gate-sole-github-writer
+INV-0001-2:
+  enforced_by:
+    - import-linter:deterministic-independent-of-stochastic
+INV-0006-1:
+  enforced_by:
+    - test:tests/meta/test_project_metadata.py::test_distribution_and_command_names
+INV-0006-2:
+  enforced_by:
+    - test:tests/meta/test_project_metadata.py::test_import_package_name
+INV-0006-3:
+  enforced_by:
+    - test:tests/meta/test_project_metadata.py::test_license_is_apache_2
+INV-0007-1:
+  enforced_by:
+    - test:tests/meta/test_conventions.py::test_lean_tests_excluded_by_default
+INV-0007-2:
+  enforced_by:
+    - ci:.github/workflows/ci.yml#pyright
+INV-0007-3:
+  enforced_by:
+    - ci:.github/workflows/ci.yml#ruff
+INV-0007-4:
+  enforced_by:
+    - ci:.github/workflows/ci.yml#import-linter
