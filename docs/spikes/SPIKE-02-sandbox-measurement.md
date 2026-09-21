@@ -225,8 +225,8 @@ workloads so the tables compare.
 - **ADR-0005 (accepted): can be accepted as written.** Ray Sandboxes ran Lean and Mathlib
   workloads with `network="none"` and blocked every probe, so INV-0005-2 held in the test. The
   "budget SPIKE-02 sets" in its `revisit_when` is not set by measurement alone: the overhead is
-  1.7-3.9x here, and whether that is tolerable is the owner's call (ADR-0018 open question
-  `overhead-budget`). Ray Sandboxes is confirmed alpha with no snapshot API.
+  1.7-3.9x here, and the owner set the budget at 2.0x (module rebuild), 2.0x (heavy Mathlib file) and 4.0x
+  (`import Mathlib`), which the measurements meet (1.7x, 1.98x, 3.9x); see ADR-0018. Ray Sandboxes is confirmed alpha with no snapshot API.
 - **ADR-0008 (proposed): can be accepted as written, with one clarification.** Nothing measured
   conflicts with it. Restoring a pristine snapshot needs to be stated as consistent with
   INV-0008-6; that is in draft ADR-0018 rather than an amendment. The local profile is workable:
@@ -234,5 +234,5 @@ workloads so the tables compare.
   denied-credential policy of INV-0008-9 in one test. `local-sandbox-default` can stay "on".
   Not measured: the hostile-tenant cases, KVM-platform overhead and shared-cluster behavior.
 - **New decision needed: ADR-0018 (proposed)**, sandbox warm start with per-session sandboxes and
-  pristine snapshots, with open questions `overhead-budget`, `snapshot-through-ray` and
+  pristine snapshots, with the owner's overhead budget and open questions `snapshot-through-ray` and
   `snapshot-portability`.

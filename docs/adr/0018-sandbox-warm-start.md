@@ -16,7 +16,6 @@ depends_on:
   - ADR-0005
   - ADR-0008
 open_questions:
-  - overhead-budget
   - snapshot-through-ray
   - snapshot-portability
 settled_by:
@@ -61,6 +60,12 @@ snapshot API. ADR-0008 forbids reusing a Lean process across tenants or sessions
 - Backends without snapshot support fall back to the cold start. `SandboxRunner` therefore
   exposes snapshot support as an optional capability, not a requirement.
 
+- Overhead budget, set by the owner: a sandboxed workload may take at most 2.0x the bare wall
+  time for a module rebuild, 2.0x for a heavy Mathlib file and 4.0x for `import Mathlib`. This is
+  the budget that ADR-0005 and ADR-0008 refer to in their `revisit_when`. SPIKE-02 measured 1.7x,
+  1.98x and 3.9x (gVisor systrap platform, no KVM, arm64), so all three fit, the heavy file
+  with almost no margin.
+
 ## Consequences
 
 - Session start is about 1.3 s with a snapshot and about 10 s without on the measured setup.
@@ -71,9 +76,6 @@ snapshot API. ADR-0008 forbids reusing a Lean process across tenants or sessions
 
 ## Open questions
 
-- `overhead-budget`: what per-session start time and per-workload overhead ratio is tolerable?
-  Measured here: gVisor was 1.7x (module rebuild), 2.0x (heavy Mathlib file) and 3.9x
-  (`import Mathlib`) the bare time. The owner sets the numbers ADR-0005 and ADR-0008 refer to.
 - `snapshot-through-ray`: wrap runsc directly for snapshots, or ask Ray for an API?
 - `snapshot-portability`: does a checkpoint restore on another host or kernel? Not measured; it
   needs a Linux cluster.

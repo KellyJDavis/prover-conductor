@@ -16,6 +16,6 @@ Invariants:
 - INV-0018-1: A snapshot used to start a Lean process is taken only from a process started by a platform builder from a platform base image that has run nothing except imports of that image's libraries.
 - INV-0018-2: Every restore of a snapshot creates a new sandbox for exactly one session; a restored or running sandbox is never handed to another tenant or session.
 
-Open questions: overhead-budget, snapshot-through-ray, snapshot-portability.
+Open questions: snapshot-through-ray, snapshot-portability.
 
 Full record: `docs/adr/0018-sandbox-warm-start.md`. Enforcement: `docs/adr/enforcement.yaml`.
