@@ -2,7 +2,7 @@
 id: SPIKE-01
 title: Lake-free fetch and the source of Mathlib artifacts
 informs: [ADR-0008, ADR-0009]
-status: open
+status: done
 ---
 
 ## Question
