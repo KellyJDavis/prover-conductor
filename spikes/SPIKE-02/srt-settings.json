@@ -1,0 +1,8 @@
+{
+  "network": { "allowedDomains": [], "deniedDomains": [] },
+  "filesystem": {
+    "denyRead": ["~/.ssh", "~/.aws", "~/.config/gh", "~/.gnupg"],
+    "allowWrite": [".", "/tmp", "/private/tmp", "/private/var/folders"],
+    "denyWrite": []
+  }
+}

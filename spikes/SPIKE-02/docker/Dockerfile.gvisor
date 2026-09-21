@@ -1,0 +1,16 @@
+# Debian with gVisor's runsc and Lean, for SPIKE-02. runsc runs nested inside a privileged
+# container (Docker Desktop VM has no /dev/kvm, so platform=systrap or ptrace).
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git curl ca-certificates xz-utils zstd libgmp10 iproute2 iptables jq procps time python3 \
+    && rm -rf /var/lib/apt/lists/*
+RUN set -e; arch=$(uname -m); \
+    curl -fsSL https://storage.googleapis.com/gvisor/releases/release/latest/${arch}/gvisor.tar.zstd \
+      | zstd -d | tar -x -C /usr/local/bin; \
+    ls /usr/local/bin; runsc --version
+ENV ELAN_HOME=/opt/elan PATH=/opt/elan/bin:$PATH
+RUN curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+      | sh -s -- -y --default-toolchain none
+ARG TOOLCHAIN=leanprover/lean4:v4.32.0
+RUN elan toolchain install $TOOLCHAIN
+WORKDIR /work
