@@ -16,7 +16,6 @@ depends_on:
   - ADR-0005
   - ADR-0008
 open_questions:
-  - snapshot-through-ray
   - snapshot-portability
 settled_by:
   - SPIKE-02
@@ -32,9 +31,10 @@ invariants:
       Every restore of a snapshot creates a new sandbox for exactly one session; a restored or
       running sandbox is never handed to another tenant or session.
 revisit_when: >-
-  A backend's snapshot mechanism can capture tenant state that the restore then exposes, the
-  overhead budget is set and measured numbers on a Linux KVM host exceed it, or Ray Sandboxes adds
-  a snapshot API that changes what SandboxRunner should expose.
+  A backend's snapshot mechanism can capture tenant state that the restore then exposes,
+  measured numbers on a Linux KVM host or a cluster exceed the overhead budget, Ray Sandboxes adds
+  a snapshot API that changes what SandboxRunner should expose, or cluster measurements show the
+  cold session start is too slow without snapshots.
 ---
 
 ## Context
@@ -59,6 +59,11 @@ snapshot API. ADR-0008 forbids reusing a Lean process across tenants or sessions
   is a narrower statement of what "warm" may mean.
 - Backends without snapshot support fall back to the cold start. `SandboxRunner` therefore
   exposes snapshot support as an optional capability, not a requirement.
+- Owner's answer on snapshots through Ray: the first implementation ships on Ray Sandboxes with
+  the cold start, which already fits the overhead budget. No second `runsc` backend is written
+  and no dependence on Ray's internal `runsc` state is taken for snapshots yet. Whether to wrap
+  `runsc` directly behind `SandboxRunner` or to ask Ray for a snapshot API is decided later, when
+  cluster measurements show whether the extra session-start time matters.
 
 - Overhead budget, set by the owner: a sandboxed workload may take at most 2.0x the bare wall
   time for a module rebuild, 2.0x for a heavy Mathlib file and 4.0x for `import Mathlib`. This is
@@ -68,7 +73,8 @@ snapshot API. ADR-0008 forbids reusing a Lean process across tenants or sessions
 
 ## Consequences
 
-- Session start is about 1.3 s with a snapshot and about 10 s without on the measured setup.
+- Session start is about 1.3 s with a snapshot and about 10 s without on the measured setup; the
+  first implementation runs without.
 - Snapshots are per base image and Lean toolchain and must be rebuilt whenever the base image
   changes; each is about 0.5 GB for Mathlib.
 - Ray Sandboxes cannot take or restore snapshots in 2.58, so a snapshot-capable backend either
@@ -76,7 +82,6 @@ snapshot API. ADR-0008 forbids reusing a Lean process across tenants or sessions
 
 ## Open questions
 
-- `snapshot-through-ray`: wrap runsc directly for snapshots, or ask Ray for an API?
 - `snapshot-portability`: does a checkpoint restore on another host or kernel? Not measured; it
   needs a Linux cluster.
 
