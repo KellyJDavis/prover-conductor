@@ -87,6 +87,40 @@ Findings:
    Mathlib definitions (`Meta.isProof` runs on every node), macro-scoped names, mutual and nested
    inductives beyond light coverage, `where` and `let rec` auxiliaries.
 
+## Follow-up results (2026-09-21)
+
+Both open questions of ADR-0019 were tried after the PR merged. Branch `spike/SPIKE-03-followup`.
+
+**External definition values.** Sample: 16 realistic statements (`ext_sample.lean`, Mathlib
+`import Mathlib`, one project-local def). Two built Mathlib revisions on disk: v4.22.0-rc4
+(mathlib4-aqft, 252457cd1f, Aug 2025) and v4.30.0 (physicslib4's Mathlib, c5ea00351c, May 2026), a
+nine-month gap, larger than a typical bump. Commands, from `spikes/SPIKE-03/`:
+`uv run python ext_values.py old <mathlib4-aqft>`, `uv run python ext_values.py new <physicslib4>/.lake/packages/mathlib <physicslib4>/.lake/packages`,
+then `uv run python ext_compare.py` and `uv run python ext_shallow.py`. Treating all library roots
+as local gives the "deep" closure (values of every reachable definition, proofs erased).
+
+- Deep closure size, median over the 16 statements: 996 (old) and 985 (new) constants, max 2342 and
+  2327; core included. Mathlib-only (core external): median 637 and 594. One tool run for all 16
+  statements including loading Mathlib: about 10 s (old) and 12 s (new); cost is not a blocker.
+- Invalidation across the two revisions: deep 16 of 16 statements, mathlib-only 16 of 16. In the deep run,
+  10 to 589 closure entries changed per statement and 46 to 459 were added or removed. These are
+  upper bounds on meaningful change (auto-generated instance names and refactors count).
+- Current design (external types only, Mathlib external, `ext_shallow.py`): 10 of 16 lock hashes
+  unchanged, 6 changed. The 6 changed because the elaborated statement itself differs, through
+  instance-path constants that exist in one revision only (for example `Monoid.toNatPow`,
+  `PseudoMetricSpace.toUniformSpace`). External type hashes changed for a constant present in both revisions in only one statement (s16). So the shallow hash already flags upgrades that changed how statements
+  elaborate, which is what ADR-0010 wants an approver to see.
+- Untried: hashing only externals mentioned directly (value one level deep), or a curated list of
+  meaning-bearing definitions.
+
+**Load safety.** `spikes/SPIKE-03/test_init_probe.py` (4 cases, `uv run pytest -m lean
+spikes/SPIKE-03/test_init_probe.py`, 4 passed on v4.33.1). A module with
+`initialize IO.FS.writeFile ...`: compiling it does not run the block. Importing it runs the block
+only with `enableInitializersExecution` and `loadExts := true` (positive control); with initializers
+enabled and `loadExts := false`, or with the tool's configuration (neither), it does not run;
+`loadExts := true` without enabling throws. Not tested: hostile `.olean` files (Lean does not
+validate them; treated as out of scope by requiring platform-compiled oleans), other Lean versions.
+
 ## Implications for ADRs
 
 - **ADR-0010**: cannot be accepted as written for `hash-definition`; ADR-0019 (proposed) records
@@ -96,10 +130,10 @@ Findings:
   prototype except for external definition values (finding 2) and attributes (finding 4); the
   ADR's wording "definitions in its closure" should say project-local, which ADR-0019 states.
 - **ADR-0019** (new, proposed): hash definition, the local-closure boundary and specification
-  versioning. Two questions stay open in it: `external-definition-values` (needs a measurement of
-  how many locks hashing external values would invalidate on a Mathlib bump) and
-  `hash-load-safety`.
-- **ADR-0005 / ADR-0008**: no change. Hashing tenant code is not shown to be safe outside the
-  sandbox, so the sandbox rule stands.
+  versioning. Both questions it left open were answered by the follow-up: do not hash external
+  values, and load with initializers off from platform-compiled oleans. ADR-0019 is updated to say
+  so and adds INV-0019-4.
+- **ADR-0005 / ADR-0008**: no change. Loading is inert for `initialize`, but a hostile `.olean`
+  is untested, so the sandbox rule stands.
 - **ADR-0009**: environment upgrades depend on the fingerprint pin to catch changed external
   values, so the fingerprint must cover Mathlib's revision.

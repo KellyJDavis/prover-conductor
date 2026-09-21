@@ -10,13 +10,12 @@ paths:
 
 Proposed, not yet binding. Treat it as the current direction, and ask the owner before implementing anything that answers one of its open questions.
 
-A lock hash is SHA-256 over the canonically serialized elaborated statement and the closure of project-local constants it mentions. Bound-variable, instance-binder and universe-parameter names, proofs and attributes are excluded; binder infos, local constant names and definition values are included. External definitions are listed by name and type hash, and a changed external body is caught by pinning the environment, not by the hash.
+A lock hash is SHA-256 over the canonically serialized elaborated statement and the closure of project-local constants it mentions. Bound-variable, instance-binder and universe-parameter names, proofs and attributes are excluded; binder infos, local constant names and definition values are included. External definitions are listed by name and type hash, and a changed external body is caught by pinning the environment, not by the hash. Loading an environment to hash it runs no module code, provided the loader is configured as specified.
 
 Invariants:
 - INV-0019-1: A lock hash is unchanged by renaming bound variables, instance-implicit binders or universe parameters, by changing any proof, and by changing whitespace, comments, docstrings, declaration order or unrelated declarations.
 - INV-0019-2: A lock hash changes when the elaborated statement changes, or when a definition value, structure, inductive, instance or local constant name in its project-local closure changes.
 - INV-0019-3: A lock records the hash specification version it was computed under, and the gate rejects a comparison across versions.
-
-Open questions: external-definition-values, hash-load-safety.
+- INV-0019-4: The hashing tool loads environments without enabling initializer execution and with extension loading off, and only reads `.olean` files produced by platform binaries in a sandbox (ADR-0005).
 
 Full record: `docs/adr/0019-statement-hash-definition.md`. Enforcement: `docs/adr/enforcement.yaml`.
