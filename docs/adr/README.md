@@ -94,3 +94,4 @@ editing the enforcement file never makes them stale.
 | ADR-0015 | proposed | Agents are data; tools are code |
 | ADR-0016 | proposed | Traces are the training-data format |
 | ADR-0017 | proposed | Fetch and Mathlib artifact placement without a networked Lake |
+| ADR-0018 | proposed | Sandbox warm start with per-session sandboxes and pristine snapshots |

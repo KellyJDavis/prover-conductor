@@ -1,0 +1,7 @@
+# Ray 2.58 (ray.experimental.sandbox, alpha) plus runsc, for measuring Ray Sandboxes locally.
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates zstd iproute2 procps \
+    && rm -rf /var/lib/apt/lists/*
+RUN set -e; arch=$(uname -m); curl -fsSL https://storage.googleapis.com/gvisor/releases/release/latest/${arch}/gvisor.tar.zstd \
+      | zstd -d | tar -x -C /usr/local/bin; runsc --version
+RUN pip install --no-cache-dir "ray==2.58.0"
