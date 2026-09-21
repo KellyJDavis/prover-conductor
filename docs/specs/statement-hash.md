@@ -60,7 +60,7 @@ statement elaborates to.
 - **Anonymous instances.** Reordering two anonymous instances of one class changes the hash,
   because their generated names (`instAddV`, `instAddV_1`) follow declaration order.
 - **External values.** A changed body of an external (Mathlib or core) definition is invisible to
-  `hash` and to `typeHash`. Detecting it needs a separate mechanism (ADR-0019).
+  `hash` and to `typeHash`. Hashing values transitively was rejected as too sensitive (ADR-0019); the environment pin covers it.
 - **Attributes.** An `@[irreducible]` change alone is not detected.
 - **Macro scopes** in names are not normalized; mutual and nested inductives, `where` and
   `let rec` are only lightly covered.
@@ -74,6 +74,6 @@ statement elaborates to.
 `--serialize`, `serialization`.
 
 The tool loads the environment with `loadExts := false` and never enables initializers, so hashing
-does not run a module's `initialize` blocks. Whether that alone makes it safe to run on tenant
-code is not established (see ADR-0019); ADR-0005 still requires the sandbox for tenant-controlled
-Lean.
+does not run a module's `initialize` blocks (tested with a positive control:
+`spikes/SPIKE-03/test_init_probe.py`). It does not defend against a hostile `.olean`, so it reads
+only `.olean` files that platform binaries produced in a sandbox (ADR-0005, ADR-0019).
