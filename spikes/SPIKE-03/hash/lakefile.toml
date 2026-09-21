@@ -1,0 +1,10 @@
+name = "stmthash"
+version = "0.1.0"
+defaultTargets = ["stmthash"]
+
+[[lean_lib]]
+name = "StatementHash"
+
+[[lean_exe]]
+name = "stmthash"
+root = "Main"
