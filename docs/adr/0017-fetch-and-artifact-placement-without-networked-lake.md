@@ -5,7 +5,8 @@ status: proposed
 date: 2026-09-21
 summary: >-
   Platform code fetches a project's git packages from lake-manifest.json, plus explicit cloud-release
-  archives at the tag of the pinned revision, and places Mathlib artifacts by running Mathlib's own
+  archives from allowlisted repositories at the tag of the pinned revision (other archives are
+  ignored and the package is built from source), and places Mathlib artifacts by running Mathlib's own
   cache executable, built offline, only for upstream Mathlib commits and only against the master
   and legacy containers. Lake never has network access. Any other Mathlib is built from source on
   a platform builder or rejected.
@@ -17,10 +18,9 @@ depends_on:
   - ADR-0008
   - ADR-0009
 open_questions:
-  - upstream-cache-trust
-  - cloud-release-policy
   - release-defaults
   - source-build-capacity
+  - release-allowlist-contents
 settled_by:
   - SPIKE-01
 superseded_by: null
@@ -36,8 +36,9 @@ invariants:
   - id: INV-0017-3
     text: >-
       A cloud-release archive is fetched only for a package whose lakefile sets preferReleaseBuild
-      to true and names both releaseRepo and buildArchive, at a tag that points at the pinned
-      revision, and is unpacked without writing outside the package's build directory.
+      to true and names both releaseRepo and buildArchive, whose releaseRepo is on the allowlist,
+      at a tag that points at the pinned revision, and is unpacked without writing outside the
+      package's build directory.
   - id: INV-0017-4
     text: >-
       The Mathlib cache executable runs with network access only when the pinned mathlib package
@@ -51,6 +52,11 @@ invariants:
     text: >-
       The environment fingerprint covers the digest of every cloud-release archive placed in the
       environment.
+  - id: INV-0017-7
+    text: >-
+      When a package's cloud-release archive is not fetched because its releaseRepo is not on the
+      allowlist, the archive is ignored and the package is built from source inside the sandbox,
+      and what that build produces stays in the tenant's cache.
 revisit_when: >-
   Lake gains an offline, hook-free way to materialize a workspace and its releases from the
   manifest, Mathlib signs or content-verifies cache artifacts, or a supported project needs a
@@ -101,10 +107,12 @@ an onboarding rule that it does not contain.
 - Fetching is platform code. It materializes the manifest's git packages with `git fetch
   --depth 1` at the pinned revision. A `path` package is accepted only if it lies inside the
   project tree (for instance a package inside another fetched package).
-- For a package whose lakefile explicitly asks for a cloud release, the fetcher takes the tag
-  that points at the pinned revision from `git ls-remote --tags`, downloads
-  `<releaseRepo>/releases/download/<tag>/<buildArchive>` over https and unpacks it into the
-  package's `.lake/build`, refusing any archive member that escapes that directory.
+- For a package whose lakefile explicitly asks for a cloud release from an allowlisted
+  `releaseRepo`, the fetcher takes the tag that points at the pinned revision from `git ls-remote
+  --tags`, downloads `<releaseRepo>/releases/download/<tag>/<buildArchive>` over https and unpacks
+  it into the package's `.lake/build`, refusing any archive member that escapes that directory. For
+  a package whose `releaseRepo` is not on the allowlist, the archive is ignored and the package
+  is built from source in the sandbox; the spike did not test that path.
 - Every request, including each redirect hop (GitHub serves release assets from a second host),
   passes the address checks of INV-0008-7.
 - Mathlib artifacts are placed in three steps that keep Lake offline: build Mathlib's `cache`
@@ -122,7 +130,9 @@ an onboarding rule that it does not contain.
 - Fetching Mathlib costs about 100 s and 7 GB of disk instead of about 3 hours of build, so a
   fingerprint for a new Mathlib commit is cheap to create.
 - The platform depends on Mathlib's CI for the integrity of `master` and `legacy` artifacts; it
-  does not verify them. Under INV-0008-5 as written, this needs the owner's decision.
+  does not verify them. The owner accepted this on 2026-09-21 (see Owner's answers). INV-0008-5 as
+  written still says only platform-built artifacts enter shared caches, so ADR-0008 needs a
+  matching amendment before either ADR is accepted.
 - Running the `cache` executable with network is running Mathlib-authored code with network. It is
   built from the pinned upstream source, so the test in the decision is what keeps tenant code
   out of that step.
@@ -131,19 +141,28 @@ an onboarding rule that it does not contain.
 - Onboarding refuses a project with an absolute `path` dependency (1 of 27 here).
 - The platform needs its own builder capacity for Mathlib commits outside the test.
 
+## Owner's answers
+
+Given on 2026-09-21. Acceptance of this ADR remains the owner's separate step.
+
+- `upstream-cache-trust`: yes. Accept `master` and `legacy` artifacts of upstream Mathlib as a
+  second source next to platform builds, for the commits and containers named in INV-0017-4.
+- `cloud-release-policy`: use an allowlist of release repositories. For a package whose archive is
+  not on it, ignore the archive and build the package from source (INV-0017-3, INV-0017-7).
+
 ## Open questions
 
-- `upstream-cache-trust`: accept `master` and `legacy` artifacts of upstream Mathlib as a second
-  source next to platform builds, given that content is not verified? Proposed: yes, for the
-  commits and containers above. Amends the wording of INV-0008-5 if accepted.
-- `cloud-release-policy`: which release repositories are accepted? The corpus has ProofWidgets4
-  (leanprover-community) and CompPoly (prebuilt oleans from a third-party repository).
-  Proposed: an allowlist; for a package that is not on it, ignore the archive and build from
-  source, which this spike did not test.
 - `release-defaults`: how to treat `preferReleaseBuild := true` without an explicit repository and
-  archive (`auto`), where Lake's defaults apply. Not handled or tested.
+  archive (`auto`), where Lake's defaults apply. Not handled or tested. The owner is unsure.
+  Until decided, the fetcher treats such a package like a non-allowlisted one: no archive is
+  fetched.
 - `source-build-capacity`: what a platform builder needs to build Mathlib from source in
-  reasonable time; the spike's figures come from a Docker host that used 2.5 to 3 cores.
+  reasonable time; the spike's figures come from a Docker host that used 2.5 to 3 cores. The owner
+  is unsure. It matters for every Mathlib outside INV-0017-4 and for non-allowlisted release
+  packages.
+- `release-allowlist-contents`: which repositories start on the allowlist. In the corpus,
+  leanprover-community/ProofWidgets4 is the one long-standing community package; CompPoly's
+  archive is prebuilt oleans from a third-party repository. Proposed: ProofWidgets4 only.
 
 ## Alternatives considered
 

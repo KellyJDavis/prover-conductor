@@ -360,10 +360,17 @@ cores, so a builder with more cores may be faster.
   dependencies (1 of 27 projects); that is a new decision, recorded in ADR-0017 (INV-0017-2), not
   an edit to ADR-0003. Of the 38 candidates from the README plus physicslib4, 11 fall outside the
   window (9 on toolchains older than v4.24.0, 2 with no `lean-toolchain`).
-- **New: ADR-0017 (proposed)** carries these amendments, with four open questions for the owner
-  (`upstream-cache-trust`, `cloud-release-policy`, `release-defaults`, `source-build-capacity`).
-  Acceptance would require the owner to decide those, and an enforcing test for each invariant
-  before code lands in `envs/` (CLAUDE.md, enforcement scopes).
+- **New: ADR-0017 (proposed)** carries these amendments. On 2026-09-21 the owner answered two of
+  its questions: `upstream-cache-trust` (yes, for the commits and containers named in INV-0017-4)
+  and `cloud-release-policy` (an allowlist of release repositories; a package whose archive is not
+  on it has the archive ignored and is built from source). Still open: `release-defaults`
+  (the owner is unsure), `source-build-capacity` (unsure) and `release-allowlist-contents`.
+  Acceptance would also require an enforcing test for each invariant before code lands in `envs/`
+  (CLAUDE.md, enforcement scopes). ADR-0008 (proposed) still needs an amendment to INV-0008-5 to
+  match the trust answer.
+- **Spike code versus ADR-0017:** `fetcher.py` fetches a cloud release from any explicit
+  `releaseRepo`; it has no allowlist and never builds a non-allowlisted package from source. The
+  build-from-source path for such packages was not tested.
 
 Other findings for later work, not tied to one ADR: `post_update` hooks exist in Mathlib and in
 `auto`, whose hook downloads a Zipperposition binary; the manifest-only fetcher never runs them.

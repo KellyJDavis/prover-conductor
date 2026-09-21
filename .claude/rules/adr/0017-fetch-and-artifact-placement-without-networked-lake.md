@@ -9,16 +9,17 @@ paths:
 
 Proposed, not yet binding. Treat it as the current direction, and ask the owner before implementing anything that answers one of its open questions.
 
-Platform code fetches a project's git packages from lake-manifest.json, plus explicit cloud-release archives at the tag of the pinned revision, and places Mathlib artifacts by running Mathlib's own cache executable, built offline, only for upstream Mathlib commits and only against the master and legacy containers. Lake never has network access. Any other Mathlib is built from source on a platform builder or rejected.
+Platform code fetches a project's git packages from lake-manifest.json, plus explicit cloud-release archives from allowlisted repositories at the tag of the pinned revision (other archives are ignored and the package is built from source), and places Mathlib artifacts by running Mathlib's own cache executable, built offline, only for upstream Mathlib commits and only against the master and legacy containers. Lake never has network access. Any other Mathlib is built from source on a platform builder or rejected.
 
 Invariants:
 - INV-0017-1: Every request the fetcher makes, including each redirect target, passes the address rules of INV-0008-7 before it is sent.
 - INV-0017-2: A path dependency is accepted only when it resolves inside the project's own tree once the git packages are fetched; an absolute path, or a path that leaves the tree, fails onboarding.
-- INV-0017-3: A cloud-release archive is fetched only for a package whose lakefile sets preferReleaseBuild to true and names both releaseRepo and buildArchive, at a tag that points at the pinned revision, and is unpacked without writing outside the package's build directory.
+- INV-0017-3: A cloud-release archive is fetched only for a package whose lakefile sets preferReleaseBuild to true and names both releaseRepo and buildArchive, whose releaseRepo is on the allowlist, at a tag that points at the pinned revision, and is unpacked without writing outside the package's build directory.
 - INV-0017-4: The Mathlib cache executable runs with network access only when the pinned mathlib package is the upstream repository at a commit that is an ancestor of upstream master or carries an upstream release tag, and it reads only the master and legacy containers.
 - INV-0017-5: No Lake process runs while the network is reachable, including during artifact placement; the platform computes the Lean search paths and answers the release-fetch calls itself.
 - INV-0017-6: The environment fingerprint covers the digest of every cloud-release archive placed in the environment.
+- INV-0017-7: When a package's cloud-release archive is not fetched because its releaseRepo is not on the allowlist, the archive is ignored and the package is built from source inside the sandbox, and what that build produces stays in the tenant's cache.
 
-Open questions: upstream-cache-trust, cloud-release-policy, release-defaults, source-build-capacity.
+Open questions: release-defaults, source-build-capacity, release-allowlist-contents.
 
 Full record: `docs/adr/0017-fetch-and-artifact-placement-without-networked-lake.md`. Enforcement: `docs/adr/enforcement.yaml`.
