@@ -2,7 +2,7 @@
 id: SPIKE-02
 title: Sandbox cost for Lean workloads
 informs: [ADR-0005, ADR-0008]
-status: open
+status: done
 ---
 
 ## Question
